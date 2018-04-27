@@ -62,12 +62,12 @@ else {
 exports.paths = [
   {
     path : "users",
-    index: "firebase",
+    index: "firebase_user",
     type : "user"
   },
   {
     path  : "messages",
-    index : "firebase",
+    index : "firebase_message",
     type  : "message",
     fields: ['msg', 'name'],
     filter: function(data) { return data.name !== 'system'; }

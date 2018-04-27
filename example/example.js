@@ -50,7 +50,7 @@
 
     // skeleton of the JSON object we will write to DB
     var query = {
-      index: index,
+      index: index + '_' + type,
       type: type
     };
 
