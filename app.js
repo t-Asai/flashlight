@@ -6,9 +6,9 @@
 
 var elasticsearch = require('elasticsearch'),
   conf = require('./config'),
-  fbutil = require('./lib/fbutil'),
-  PathMonitor = require('./lib/PathMonitor'),
-  SearchQueue = require('./lib/SearchQueue');
+  fbutil = require('./lib_fs/fbutil'),
+  PathMonitor = require('./lib_fs/PathMonitor'),
+  SearchQueue = require('./lib_fs/SearchQueue');
 
 var escOptions = {
   hosts: [{
