@@ -1,23 +1,29 @@
 'use strict';
 
-var admin = require('firebase-admin');
+const firebase = require("firebase");
 require('colors');
 
 exports.init = function(databaseURL, serviceAccount) {
    var config = {
-     databaseURL: databaseURL,
-     credential: admin.credential.cert(serviceAccount)
    };
-   admin.initializeApp(config)
 };
 
 exports.fbRef = function(path) {
-   return admin.database().ref().child(path);
+  console.log('path?');
+  console.log(path);
+  console.log('tmp?');
+  const tmp = firebase.firestore().collection('search_response').then((val) => {
+    console.log(val)
+  }).catch((val) => {
+    console.log(val)
+  });
+  console.log(tmp);
+  console.log('tmp?');
+   return firebase.firestore().collection(path);
 };
 
 exports.pathName = function(ref) {
-   var p = ref.parent.key;
-   return (p? p+'/' : '')+ref.key;
+  return '本来ならpath名を返すところだけど、console.logでしか使ってないので後回し';
 };
 
 exports.isString = function(s) {

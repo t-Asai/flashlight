@@ -4,7 +4,10 @@ var DynamicPathMonitor = require('./DynamicPathMonitor');
 require('colors');
 
 function PathMonitor(esc, path) {
-   this.ref = fbutil.fbRef(path.path);
+  console.log('this.ref');
+  this.ref = fbutil.fbRef(path.path);
+   console.log(this.ref);
+   console.log('this.ref');
    if( fbutil.isFunction(path.refBuilder) ) {
      this.ref = path.refBuilder(this.ref, path);
    }
@@ -122,12 +125,16 @@ function parseKeys(data, fields, omit) {
 
 exports.process = function(esc, paths) {
   if( fbutil.isString(paths) ) {
+    console.log('case1');
     new DynamicPathMonitor(fbutil.fbRef(paths), function(pathProps) {
       return new PathMonitor(esc, pathProps);
     });
   }
   else if( fbutil.isObject(paths) && paths.length ) {
+    console.log('case2');
     paths.forEach(function(pathProps) {
+      console.log(esc);
+      console.log(pathProps);
       new PathMonitor(esc, pathProps);
     });
   }
