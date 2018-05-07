@@ -3,12 +3,11 @@
 /*
  * @version 0.3, 3 June 2014
  */
+var admin = require('firebase-admin');
 
 var elasticsearch = require('elasticsearch'),
   conf = require('./config'),
-  fbutil = require('./lib_rtdb/fbutil'),
-  PathMonitor = require('./lib_rtdb/PathMonitor'),
-  SearchQueue = require('./lib_rtdb/SearchQueue');
+  SearchQueue = require('./lib_fs/SearchQueue');
 
 var escOptions = {
   hosts: [{
@@ -40,8 +39,8 @@ var timeoutObj = setInterval(function() {
 
 function initFlashlight() {
   console.log('Connecting to Firebase %s'.grey, conf.FB_URL);
-  fbutil.init(conf.FB_URL, conf.FB_SERVICEACCOUNT);
-  PathMonitor.process(esc, conf.paths, conf.FB_PATH);
-  console.log('pathmonitor done')
+  // fbutil.init(conf.FB_URL, conf.FB_SERVICEACCOUNT);
+  // PathMonitor.process(esc, conf.paths, conf.FB_PATH);
+  // console.log('pathmonitor done')
   SearchQueue.init(esc, conf.FB_REQ, conf.FB_RES, conf.CLEANUP_INTERVAL);
 }
