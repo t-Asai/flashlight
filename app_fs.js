@@ -87,16 +87,21 @@ SearchQueue.prototype = {
       }
 
       this.esc.search(query, function(error, response) {
-        let return_data = {}
-        response.hits.hits.forEach(((data) => {
-          return_data[data._id] = {
-            id: data._id,
-            source: data._source,
-            score: data._score,
-          }
-        }))
-        this.ref_res.doc(doc.id).set(return_data);
-        this.ref_req.doc(doc.id).delete();
+        if(error === undefined){
+          let return_data = {}
+          response.hits.hits.forEach(((data) => {
+            return_data[data._id] = {
+              id: data._id,
+              source: data._source,
+              score: data._score,
+            }
+          }))
+          this.ref_res.doc(doc.id).set(return_data);
+          this.ref_req.doc(doc.id).delete();
+        }else{
+          console.log('error in ElasticSearch search')
+          // console.log(error)
+        }
       }.bind(this));
     })
   },
