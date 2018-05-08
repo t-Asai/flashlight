@@ -1,15 +1,16 @@
 const firebase = require("firebase");
 require("firebase/firestore");
+conf = require('../config');
 
-var config = {
-  apiKey: "",
-  authDomain: "",
-  databaseURL: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: ""
+var firebase_config = {
+  apiKey: conf.apiKey,
+  authDomain: conf.authDomain,
+  databaseURL: conf.databaseURL,
+  projectId: conf.projectId,
+  storageBucket: conf.storageBucket,
+  messagingSenderId: conf.messagingSenderId
 };
-firebase.initializeApp(config);
+firebase.initializeApp(firebase_config);
 
 function SearchQueue(esc, reqRef, resRef, cleanupInterval) {
    this.esc = esc;
