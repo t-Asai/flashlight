@@ -1,4 +1,3 @@
-const admin = require('firebase-admin');
 const firebase = require("firebase");
 require("firebase/firestore");
 
@@ -42,7 +41,7 @@ let timeoutObj = setInterval(function() {
 //////////////////////////////////////////////////
 /*
 * firebaseと接続し、データの受け渡しを行う
-* ために、まずはadmin sdkの初期化をする
+* ために、まずはfirebaseのsdkを初期化する
 */
 const firebase_config = {
   apiKey: conf.apiKey,
