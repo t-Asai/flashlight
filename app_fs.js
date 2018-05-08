@@ -35,6 +35,7 @@ let timeoutObj = setInterval(function() {
       console.log('Connected to ElasticSearch host %s:%s'.grey, conf.ES_HOST, conf.ES_PORT);
       clearInterval(timeoutObj);
       new SearchQueue(esc, conf.FB_REQ, conf.FB_RES, conf.CLEANUP_INTERVAL);
+      new Registration(esc, conf.FB_REQ, conf.FB_RES, conf.CLEANUP_INTERVAL);
     });
 }, 5000);
 
@@ -104,6 +105,58 @@ SearchQueue.prototype = {
         }
       }.bind(this));
     })
+  },
+
+};
+
+//////////////////////////////////////////////////
+/*
+* firebaseのデータに変更が加えられたときに、
+* ElasticSearchの方にデータを送るやつ
+* 今は、全部更新するようにしているけど、
+* 普通に考えるなら、フラグ管理orタイムスタンプで管理をすべきもの
+* まだ色々確定していないので、未開発
+*/
+function Registration(esc, reqRef, resRef, cleanupInterval) {
+  this.esc = esc;
+  this.cleanupInterval = cleanupInterval;
+  this.ref = firebase.firestore().collection('users');
+  this.unsubscribe = null;
+  this.unsubscribe = this.ref.onSnapshot(this._showResults.bind(this));
+}
+
+//////////////////////////////////////////////////
+/*
+*/
+Registration.prototype = {
+  _showResults: function(snap) {
+    snap.forEach(async (doc) => {
+      const send_data = {
+        index: 'firebase_user',
+        type: 'user',
+        id: doc.id,
+        body: {
+          name: doc.data().name,
+          doc: doc.data().doc,
+        },
+      }
+      await this._delData(doc.id)  // 消し終わってから書き込みに行かないと、ElasticSearchの方で重複書き込みエラーになる
+      this._sendData(send_data)
+    })
+  },
+
+  _delData: function(id) {
+    this.esc.delete({
+      index: 'firebase_user',
+      type: 'user',
+      id: id,
+    }, function (error, response) {
+    });
+  },
+
+  _sendData: function(send_data) {
+    this.esc.create(send_data, function (error, response) {
+    }.bind(this));
   },
 
 };
