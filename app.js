@@ -92,6 +92,8 @@ SearchQueue.prototype = {
       * 複数のindexに対して、複数の条件で調べることが出来るやつ
       * 現状、いる未来が見えないけど、覚えておこう
       * https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#api-msearch
+      * searchをelasticsearchに投げる時に、指定したindexが登録されてないとエラー吐くっぽい
+      * ローカルで遊ぶ時に注意が必要だった
       */
       this.esc.search(query, function(error, response) {
         if(error === undefined){
@@ -122,6 +124,8 @@ SearchQueue.prototype = {
 * 今は、全部更新するようにしているけど、
 * 普通に考えるなら、フラグ管理orタイムスタンプで管理をすべきもの
 * まだ色々確定していないので、未開発
+* subscribeするときのcollection名とindexのセットは別で持っておいて、
+* それを渡すことでうまい感じにごにょごにょしたい
 */
 function Registration(esc, reqRef, resRef, cleanupInterval) {
   this.esc = esc;
@@ -137,6 +141,9 @@ function Registration(esc, reqRef, resRef, cleanupInterval) {
 Registration.prototype = {
   _showResults: function(snap) {
     snap.forEach(async (doc) => {
+      console.log('doc->')
+      console.log(doc)
+      console.log('<-doc')
       const send_data = {
         index: 'firebase_user',
         type: 'user',
@@ -190,9 +197,6 @@ Registration.prototype = {
 
   _sendData: function(send_data) {
     /*
-    * createでデータを登録するには、前もってelasticsearchの方に同じindex, typeのものが登録されてる必要がある模様
-    * If a document with the same index, type, and id already exists, an error will occur.
-    * https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#api-create
     * this.esc.indexの方が良いかもしれない
     * これだと、add or updateだから、大丈夫そう
     * When you specify an id either a new document will be created, or an existing document will be updated. To enforce "put-if-absent" behavior set the opType to "create" or use the create() method.
