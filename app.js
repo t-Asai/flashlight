@@ -87,6 +87,12 @@ SearchQueue.prototype = {
         type
       }
 
+      /*
+      * msearchとかいうものがある模様
+      * 複数のindexに対して、複数の条件で調べることが出来るやつ
+      * 現状、いる未来が見えないけど、覚えておこう
+      * https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#api-msearch
+      */
       this.esc.search(query, function(error, response) {
         if(error === undefined){
           let return_data = {}
@@ -140,6 +146,31 @@ Registration.prototype = {
           doc: doc.data().doc,
         },
       }
+      /*
+      * この段階でelasticsearchの方に更新をかけるかどうかを判断する
+      * 基準は、フラグをfirestoreの方に用意しておく or データの更新日時
+      * フラグ管理にすると、書き込み回数がどんどん増えるので微妙かもしれないが
+      * データの更新日時だと、このやり方には向いてないかもしれない
+      * 更新のトリガーを、firestoreの更新ではなく、cronにするべき
+      * その場合の問題は、cronの設定と管理をどうするか and firestoreのupdatedAtの管理方法
+      * firestoreのデータは残念ながら、docと同階層に保存されてるから、ちょっと面倒かもしれない
+      * プロパティをかなり辿るといけた気もする。
+      * batchで更新するなら一つずつ更新ではなく、buldを使う
+      * https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#api-bulk
+      * firestoreのsubscribeするときに、whereが使えるのであれば、
+      * 更新時に書き換えの方が向いてるかもしれない
+      * なぜなら、firestoreからgaeに渡すデータ量が減らせるから
+      * timestampでwhereがかけたらそれでも良いのかもしれないが、難しい
+      * フラグ管理にすると、書き込み待機状態から書き込んだ直後にも二回発火するかもしれない
+      * 読み取り
+      * subscribe=null
+      * 書き込み
+      * re subscribeで良いのか？？？
+      * ちょっとローカルで試すか
+      * 
+      * firestoreからデータが削除された時ってどうすれば良いんだろうか？
+      * fieldが消えたくらいなら良いけど、doc自体が消えると不安
+      */
       await this._delData(doc.id)  // 消し終わってから書き込みに行かないと、ElasticSearchの方で重複書き込みエラーになる
       this._sendData(send_data)
     })
@@ -155,6 +186,16 @@ Registration.prototype = {
   },
 
   _sendData: function(send_data) {
+    /*
+    * createでデータを登録するには、前もってelasticsearchの方に同じindex, typeのものが登録されてる必要がある模様
+    * If a document with the same index, type, and id already exists, an error will occur.
+    * https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#api-create
+    * this.esc.indexの方が良いかもしれない
+    * これだと、add or updateだから、大丈夫そう
+    * When you specify an id either a new document will be created, or an existing document will be updated. To enforce "put-if-absent" behavior set the opType to "create" or use the create() method.
+    * https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#api-index
+    * https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#api-indices-create
+    */
     this.esc.create(send_data, function (error, response) {
       console.log('response->')
       console.log(response)
