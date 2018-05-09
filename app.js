@@ -126,7 +126,7 @@ SearchQueue.prototype = {
 function Registration(esc, reqRef, resRef, cleanupInterval) {
   this.esc = esc;
   this.cleanupInterval = cleanupInterval;
-  this.ref = firebase.firestore().collection('users');
+  this.ref = firebase.firestore().collection('users').where("ES_STATE", "==", "STAY");;
   this.unsubscribe = null;
   this.unsubscribe = this.ref.onSnapshot(this._showResults.bind(this));
 }
@@ -155,7 +155,7 @@ Registration.prototype = {
       * その場合の問題は、cronの設定と管理をどうするか and firestoreのupdatedAtの管理方法
       * firestoreのデータは残念ながら、docと同階層に保存されてるから、ちょっと面倒かもしれない
       * プロパティをかなり辿るといけた気もする。
-      * batchで更新するなら一つずつ更新ではなく、buldを使う
+      * batchで更新するなら一つずつ更新ではなく、bulkを使う
       * https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#api-bulk
       * firestoreのsubscribeするときに、whereが使えるのであれば、
       * 更新時に書き換えの方が向いてるかもしれない
@@ -167,11 +167,14 @@ Registration.prototype = {
       * 書き込み
       * re subscribeで良いのか？？？
       * ちょっとローカルで試すか
+      * -> キタコレ。フラグでsubscribeできる
+      * ってことで、elasticsearchの検索対象になるデータが更新されたときに、statusをstayにして、
+      * elasticsearchの方を更新できたらdoneにする運用で良いかもしれない
       * 
       * firestoreからデータが削除された時ってどうすれば良いんだろうか？
       * fieldが消えたくらいなら良いけど、doc自体が消えると不安
       */
-      await this._delData(doc.id)  // 消し終わってから書き込みに行かないと、ElasticSearchの方で重複書き込みエラーになる
+      // await this._delData(doc.id)  // 消し終わってから書き込みに行かないと、ElasticSearchの方で重複書き込みエラーになる
       this._sendData(send_data)
     })
   },
@@ -196,7 +199,7 @@ Registration.prototype = {
     * https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#api-index
     * https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#api-indices-create
     */
-    this.esc.create(send_data, function (error, response) {
+    this.esc.index(send_data, function (error, response) {
       console.log('response->')
       console.log(response)
       console.log('<-response')
