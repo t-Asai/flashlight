@@ -1,3 +1,22 @@
+/*
+ * 元々のflashlightと差分を少なくするために
+ * 引数とかなるべく変えずに行ってるが、
+ * そろそろ整理しないと使ってないものが溢れてきている
+*/
+
+/*
+ * 残タスク *
+  * reactから渡されたデータに応じて、queryを作成する
+  * configを書き直す
+  * 引数を整理する
+  * 関数ごとにファイル分割する
+  * subscribeするcollectionを管理する
+  * 消した例外処理の中から必要な分を復活させる
+  * フラグ管理でelasticへの更新をかけに行くなら、firestoreのフラグ更新も必要になる
+  * reactに返すデータの整形
+  * firestoreでデータ削除が必要になったときの処理を決める
+*/
+
 const firebase = require("firebase");
 require("firebase/firestore");
 
@@ -6,7 +25,7 @@ const conf = require('./config');
 
 //////////////////////////////////////////////////
 /*
-* ElasticSearchの初期化
+ * ElasticSearchの初期化
 */
 const escOptions = {
   hosts: [{
@@ -24,7 +43,7 @@ for (let attrname in conf.ES_OPTS) {
 
 //////////////////////////////////////////////////
 /*
-* ElasticSearchへの接続
+ * ElasticSearchへの接続
 */
 let esc = new elasticsearch.Client(escOptions);
 console.log('Connecting to ElasticSearch host %s:%s'.grey, conf.ES_HOST, conf.ES_PORT);
@@ -41,8 +60,8 @@ let timeoutObj = setInterval(function() {
 
 //////////////////////////////////////////////////
 /*
-* firebaseと接続し、データの受け渡しを行う
-* ために、まずはfirebaseのsdkを初期化する
+ * firebaseと接続し、データの受け渡しを行う
+ * ために、まずはfirebaseのsdkを初期化する
 */
 const firebase_config = {
   apiKey: conf.apiKey,
@@ -56,7 +75,7 @@ firebase.initializeApp(firebase_config);
 
 //////////////////////////////////////////////////
 /*
-* firebaseと接続し、subscribeの登録を行う
+ * firebaseと接続し、subscribeの登録を行う
 */
 function SearchQueue(esc, reqRef, resRef, cleanupInterval) {
   this.esc = esc;
@@ -69,11 +88,17 @@ function SearchQueue(esc, reqRef, resRef, cleanupInterval) {
 
 //////////////////////////////////////////////////
 /*
-* firebaseのデータにqueryが登録されたときに
-* ElasticSearchへ検索を投げて、結果をfirebaseの方に返す
-* 今は、requestにqueryに必要なデータをそのまま突っ込んでいるが、
-* そのうち、ロジックをこっちに持ってくる
-* 返却するときのデータ整形もあとで決める
+ * firebaseのデータにqueryが登録されたときに
+ * ElasticSearchへ検索を投げて、結果をfirebaseの方に返す
+ * 今は、requestにqueryに必要なデータをそのまま突っ込んでいるが、
+ * そのうち、ロジックをこっちに持ってくる
+ * 返却するときのデータ整形もあとで決める
+ * というか、ロジックはこっちに持ってこないと、アプリの変更ができないから
+ * まともなサービス作る時にはこっちだな
+ * react側からは、リストをくれってリクエストを飛ばすことだけにして
+ * クエリを作るのはGAEで
+ * 結果を返すのもGAE
+ * renderingする時に整形する段階で再びreactに任せる
 */
 SearchQueue.prototype = {
   _showResults: function(snap) {
@@ -119,13 +144,13 @@ SearchQueue.prototype = {
 
 //////////////////////////////////////////////////
 /*
-* firebaseのデータに変更が加えられたときに、
-* ElasticSearchの方にデータを送るやつ
-* 今は、全部更新するようにしているけど、
-* 普通に考えるなら、フラグ管理orタイムスタンプで管理をすべきもの
-* まだ色々確定していないので、未開発
-* subscribeするときのcollection名とindexのセットは別で持っておいて、
-* それを渡すことでうまい感じにごにょごにょしたい
+ * firebaseのデータに変更が加えられたときに、
+ * ElasticSearchの方にデータを送るやつ
+ * 今は、全部更新するようにしているけど、
+ * 普通に考えるなら、フラグ管理orタイムスタンプで管理をすべきもの
+ * まだ色々確定していないので、未開発
+ * subscribeするときのcollection名とindexのセットは別で持っておいて、
+ * それを渡すことでうまい感じにごにょごにょしたい
 */
 function Registration(esc, reqRef, resRef, cleanupInterval) {
   this.esc = esc;
@@ -136,8 +161,7 @@ function Registration(esc, reqRef, resRef, cleanupInterval) {
 }
 
 //////////////////////////////////////////////////
-/*
-*/
+
 Registration.prototype = {
   _showResults: function(snap) {
     snap.forEach(async (doc) => {
