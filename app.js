@@ -10,7 +10,7 @@
   * configを書き直す
   * 引数を整理する
   * 関数ごとにファイル分割する
-  * subscribeするcollectionを管理する
+  * subscribeするcollectionを管理する(合わせて、張るインデクスとtypeも管理)
   * 消した例外処理の中から必要な分を復活させる
   * フラグ管理でelasticへの更新をかけに行くなら、firestoreのフラグ更新も必要になる
   * reactに返すデータの整形
@@ -134,7 +134,7 @@ SearchQueue.prototype = {
           this.ref_req.doc(doc.id).delete();
         }else{
           console.log('error in ElasticSearch search')
-          console.log(error)
+          // console.log(error)
         }
       }.bind(this));
     })
@@ -165,9 +165,6 @@ function Registration(esc, reqRef, resRef, cleanupInterval) {
 Registration.prototype = {
   _showResults: function(snap) {
     snap.forEach(async (doc) => {
-      console.log('doc->')
-      console.log(doc)
-      console.log('<-doc')
       const send_data = {
         index: 'firebase_user',
         type: 'user',
@@ -228,12 +225,8 @@ Registration.prototype = {
     * https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html#api-indices-create
     */
     this.esc.index(send_data, function (error, response) {
-      console.log('response->')
-      console.log(response)
-      console.log('<-response')
-      console.log('error->')
-      console.log(error)
-      console.log('<-error')
+      console.log('error in sending data to ElasticSearch')
+      // console.log(error)
     }.bind(this));
   },
 
